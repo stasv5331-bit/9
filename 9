@@ -1,42 +1,65 @@
-# Итерация 1: Базовые заглушки
+# Итерация 2: Реализация основных функций
 def find_anagrams_in_text(text):
     """
     Основная функция для поиска анаграмм в тексте.
     Возвращает массив групп анаграмм.
     """
-    # Заглушка для основной логики
-    return [["заглушка1", "заглушка2"]]
+    # Очищаем текст
+    cleaned_text = clean_text(text)
+    
+    # Получаем слова из текста
+    words = get_words_from_text(cleaned_text)
+    
+    # Создаем словарь для группировки анаграмм
+    anagram_groups = {}
+    
+    # Группируем слова по их нормализованной форме
+    for word in words:
+        normalized = normalize_word(word)
+        if normalized not in anagram_groups:
+            anagram_groups[normalized] = []
+        anagram_groups[normalized].append(word)
+    
+    # Фильтруем только группы с более чем одним словом
+    result = [group for group in anagram_groups.values() if len(group) > 1]
+    
+    return result
 
 def clean_text(text):
     """
     Очищает текст от лишних символов и знаков препинания.
     """
-    # Заглушка
-    return text
+    # Удаляем знаки препинания (базовая версия)
+    punctuation = ".,!?;:()[]{}\'"
+    for char in punctuation:
+        text = text.replace(char, ' ')
+    return text.lower()
 
 def normalize_word(word):
     """
     Нормализует слово для сравнения (сортировка букв).
     """
-    # Заглушка
-    return word
+    # Сортируем буквы в слове
+    return ''.join(sorted(word.lower()))
 
 def get_words_from_text(text):
     """
     Извлекает слова из текста.
     """
-    # Заглушка
-    return []
+    # Разделяем текст по пробелам и удаляем пустые строки
+    return [word for word in text.split() if word]
 
 def is_anagram(word1, word2):
     """
     Проверяет, являются ли два слова анаграммами.
     """
-    # Заглушка
-    return False
+    return normalize_word(word1) == normalize_word(word2)
 
 if __name__ == "__main__":
-    # Пример использования
-    sample_text = "Пример текста для тестирования"
+    # Тестовый пример
+    sample_text = "кот ток кто"
     result = find_anagrams_in_text(sample_text)
-    print("Результат (заглушка):", result)
+    print("Пример 1:")
+    print("Текст:", sample_text)
+    print("Анаграммы:", result)
+    print()
