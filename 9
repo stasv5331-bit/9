@@ -1,72 +1,171 @@
-# Итерация 3: Улучшенная обработка текста
+# Итерация 4: Полная реализация с обработкой краевых случаев
 import re
 from collections import defaultdict
 
 def find_anagrams_in_text(text):
     """
-    Основная функция для поиска анаграмм в тексте.
-    Возвращает массив групп анаграмм.
+    Находит все группы анаграмм во входном тексте.
+    
+    Args:
+        text (str): Входной текст для анализа
+        
+    Returns:
+        list: Массив групп анаграмм, где каждая группа - список слов
     """
+    # Проверка входных данных
+    if not text or not isinstance(text, str):
+        return []
+    
     # Очищаем текст
     cleaned_text = clean_text(text)
     
-    # Получаем слова из текста
-    words = get_words_from_text(cleaned_text)
+    # Получаем уникальные слова из текста
+    words = get_unique_words(cleaned_text)
     
-    # Используем defaultdict для удобства
-    anagram_groups = defaultdict(list)
+    # Группируем анаграммы
+    anagram_groups = group_anagrams(words)
     
-    # Группируем слова по их нормализованной форме
-    for word in words:
-        if len(word) > 1:  # Игнорируем однобуквенные "слова"
-            normalized = normalize_word(word)
-            # Добавляем слово только если его еще нет в группе
-            if word not in anagram_groups[normalized]:
-                anagram_groups[normalized].append(word)
-    
-    # Фильтруем только группы с более чем одним словом
-    result = [sorted(group) for group in anagram_groups.values() if len(group) > 1]
-    
-    # Сортируем результат для удобства
-    result.sort(key=lambda x: (len(x[0]), x[0]))
-    
-    return result
+    return anagram_groups
 
 def clean_text(text):
     """
-    Очищает текст от лишних символов и знаков препинания.
+    Очищает текст: приводит к нижнему регистру и удаляет знаки препинания.
+    
+    Args:
+        text (str): Исходный текст
+        
+    Returns:
+        str: Очищенный текст
     """
-    # Удаляем все не-буквенные символы, кроме пробелов
+    # Заменяем все не-буквенные символы на пробелы
+    # Поддерживаем русские и английские буквы
     text = re.sub(r'[^a-zA-Zа-яА-ЯёЁ\s]', ' ', text)
-    return text.lower()
+    return text.lower().strip()
 
 def normalize_word(word):
     """
-    Нормализует слово для сравнения (сортировка букв).
+    Нормализует слово для сравнения анаграмм.
+    
+    Args:
+        word (str): Исходное слово
+        
+    Returns:
+        str: Нормализованная форма (отсортированные буквы)
     """
-    # Сортируем буквы в слове
-    return ''.join(sorted(word.lower()))
+    return ''.join(sorted(word))
 
-def get_words_from_text(text):
+def get_unique_words(text):
     """
-    Извлекает слова из текста.
+    Извлекает уникальные слова из текста.
+    
+    Args:
+        text (str): Очищенный текст
+        
+    Returns:
+        list: Список уникальных слов длиной более 1 символа
     """
-    # Разделяем текст по пробелам и удаляем пустые строки
-    return [word for word in text.split() if word]
+    words = text.split()
+    # Фильтруем слова: длина > 1 и уникальность
+    unique_words = []
+    seen = set()
+    
+    for word in words:
+        if len(word) > 1 and word not in seen:
+            seen.add(word)
+            unique_words.append(word)
+    
+    return unique_words
 
-if __name__ == "__main__":
-    # Тестовые примеры
-    test_cases = [
-        "кот ток кто",
-        "лист столи тсил",
-        "Hello world from Python!",
+def group_anagrams(words):
+    """
+    Группирует слова по анаграммам.
+    
+    Args:
+        words (list): Список слов для группировки
+        
+    Returns:
+        list: Группы анаграмм (списки слов)
+    """
+    anagram_dict = defaultdict(list)
+    
+    for word in words:
+        key = normalize_word(word)
+        anagram_dict[key].append(word)
+    
+    # Фильтруем и сортируем результат
+    result = []
+    for group in anagram_dict.values():
+        if len(group) > 1:
+            result.append(sorted(group))
+    
+    # Сортируем группы по первому слову
+    result.sort(key=lambda x: x[0])
+    
+    return result
+
+def main():
+    """
+    Основная функция для демонстрации работы алгоритма.
+    """
+    test_texts = [
+        # Простой пример
+        "кот ток кто отк тко",
+        
+        # Пример с русским языком
+        "лист столи тсил истл",
+        
+        # Пример с английским языком
+        "listen silent enlist tinsel",
+        
+        # Пример со знаками препинания
+        "cat, tac! act? atc.",
+        
+        # Пример из классики
         "А роза упала на лапу Азора",
-        "Слова: кот, ток, кто, отк, тко"
+        
+        # Смешанный текст
+        "Hello world! drawer reward redraw warder",
+        
+        # Пустой текст
+        "",
+        
+        # Текст без анаграмм
+        "Это тестовый текст без анаграмм",
     ]
     
-    for i, text in enumerate(test_cases, 1):
-        print(f"Пример {i}:")
-        print(f"Текст: '{text}'")
-        result = find_anagrams_in_text(text)
-        print(f"Анаграммы: {result}")
-        print()
+    print("Тестирование поиска анаграмм в тексте")
+    print("=" * 50)
+    
+    for i, text in enumerate(test_texts, 1):
+        print(f"\nТест #{i}:")
+        print(f"Входной текст: '{text}'")
+        
+        anagrams = find_anagrams_in_text(text)
+        
+        if anagrams:
+            print(f"Найдено групп анаграмм: {len(anagrams)}")
+            for j, group in enumerate(anagrams, 1):
+                print(f"  Группа {j}: {group}")
+        else:
+            print("Анаграммы не найдены")
+    
+    # Демонстрационный пример
+    print("\n" + "=" * 50)
+    print("Демонстрационный пример:")
+    
+    demo_text = """
+    Кот ток кто отк.
+    Listen silent enlist tinsel.
+    Drawer reward redraw warder.
+    Азора роза.
+    """
+    
+    print(f"Текст:\n{demo_text}")
+    print("Результат поиска анаграмм:")
+    
+    results = find_anagrams_in_text(demo_text)
+    for group in results:
+        print(f"  - {group}")
+
+if __name__ == "__main__":
+    main()
